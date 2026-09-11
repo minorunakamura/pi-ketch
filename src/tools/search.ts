@@ -2,7 +2,6 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 
 import {
-  buildKetchArgs,
   clampInteger,
   DEFAULT_SEARCH_TIMEOUT_MS,
   DEFAULT_TOOL_SCRAPE_CHARS,
@@ -11,7 +10,7 @@ import {
   detailsFor,
   runKetch,
 } from "../runtime/run-ketch";
-import type { Flags } from "../types";
+import { buildSearchArgs } from "../runtime/search";
 
 export function registerKetchSearchTool(
   pi: Pick<ExtensionAPI, "registerTool" | "exec">,
@@ -91,7 +90,8 @@ export function registerKetchSearchTool(
         details: {},
       });
 
-      const flags: Flags = {
+      const args = buildSearchArgs({
+        query: params.query,
         limit:
           params.limit !== undefined
             ? clampInteger(params.limit, 1, 20)
@@ -101,7 +101,7 @@ export function registerKetchSearchTool(
         scrape: params.scrape === true,
         trim:
           params.scrape === true ? params.trim !== false : params.trim === true,
-        "max-chars":
+        maxChars:
           params.scrape === true
             ? clampInteger(
                 params.maxChars ?? DEFAULT_TOOL_SCRAPE_CHARS,
@@ -109,11 +109,9 @@ export function registerKetchSearchTool(
                 MAX_TOOL_CHARS,
               )
             : undefined,
-        "searxng-url": nonEmpty(params.searxngUrl),
-        "cookie-file": nonEmpty(params.cookieFile),
-      };
-
-      const args = buildKetchArgs("search", [params.query], flags);
+        searxngUrl: nonEmpty(params.searxngUrl),
+        cookieFile: nonEmpty(params.cookieFile),
+      });
       const run = await runKetch(pi, args, {
         cwd: ctx.cwd,
         signal,

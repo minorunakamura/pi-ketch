@@ -16,6 +16,7 @@ import type {
   KetchRunResult,
   KetchToolDetails,
 } from "../types";
+import { KetchExecutionFailure, executeKetch } from "./execute-ketch";
 
 export const DEFAULT_TIMEOUT_MS = 60_000;
 export const DEFAULT_SEARCH_TIMEOUT_MS = 45_000;
@@ -152,30 +153,36 @@ export async function runKetch(
   if (options.signal?.aborted)
     throw new Error("[cancelled] Aborted before ketch started");
 
-  let result: Awaited<ReturnType<ExtensionAPI["exec"]>>;
+  let result: Awaited<ReturnType<typeof executeKetch>>;
   try {
-    result = await pi.exec("ketch", args, {
+    result = await executeKetch(pi, args, {
       cwd: options.cwd,
       signal: options.signal,
-      timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+      timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     });
   } catch (error) {
     const message = conciseErrorText(error);
-    if (/ENOENT|not found|spawn ketch/i.test(message)) {
+    if (
+      (error instanceof KetchExecutionFailure && error.code === "not_found") ||
+      /ENOENT|not found|spawn ketch/i.test(message)
+    ) {
       throw new Error(KETCH_INSTALL_HINT, { cause: error });
+    }
+    if (error instanceof KetchExecutionFailure && error.code === "cancelled") {
+      throw new Error(`[cancelled] ${message}`, { cause: error });
     }
     throw new Error(`ketch 実行に失敗しました: ${message}`, { cause: error });
   }
 
   const allowedExitCodes = new Set([0, ...(options.allowExitCodes ?? [])]);
-  if (!allowedExitCodes.has(result.code)) {
+  if (!allowedExitCodes.has(result.exitCode)) {
     const output = [result.stderr, result.stdout]
       .filter(Boolean)
       .join("\n")
       .trim();
     const detail = output ? `\n${output}` : "";
     throw new Error(
-      `${classifyKetchExit(result.code)}: ${commandLine(args)} failed with exit code ${result.code}${detail}`,
+      `${classifyKetchExit(result.exitCode)}: ${commandLine(args)} failed with exit code ${result.exitCode}${detail}`,
     );
   }
 
@@ -187,7 +194,7 @@ export async function runKetch(
     args,
     stdout: output.text,
     stderr: result.stderr,
-    exitCode: result.code,
+    exitCode: result.exitCode,
     truncated: output.truncation,
     fullOutputPath: output.fullOutputPath,
   };
