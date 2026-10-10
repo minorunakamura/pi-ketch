@@ -11,6 +11,7 @@ import {
   runKetch,
 } from "../runtime/run-ketch";
 import { buildSearchArgs } from "../runtime/search";
+import { renderKetchResult } from "../ui/tool-result";
 
 export function registerKetchSearchTool(
   pi: Pick<ExtensionAPI, "registerTool" | "exec">,
@@ -18,6 +19,7 @@ export function registerKetchSearchTool(
   pi.registerTool({
     name: "ketch_search",
     label: "Ketch Search",
+    renderResult: renderKetchResult,
     description:
       "Search the live web using the ketch CLI. Returns JSON. When scrape is true, each fetched page is bounded to maxChars (default 6000, max 50000).",
     promptSnippet: "Search the live web via ketch search",

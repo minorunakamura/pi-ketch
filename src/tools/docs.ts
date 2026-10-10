@@ -10,6 +10,7 @@ import {
   runKetch,
 } from "../runtime/run-ketch";
 import type { Flags } from "../types";
+import { renderKetchResult } from "../ui/tool-result";
 
 export function registerKetchDocsTool(
   pi: Pick<ExtensionAPI, "registerTool" | "exec">,
@@ -17,6 +18,7 @@ export function registerKetchDocsTool(
   pi.registerTool({
     name: "ketch_docs",
     label: "Ketch Docs",
+    renderResult: renderKetchResult,
     description:
       "Search or resolve curated library/framework documentation using ketch docs and Context7. Returns JSON.",
     promptSnippet: "Search curated library/framework docs via ketch docs",

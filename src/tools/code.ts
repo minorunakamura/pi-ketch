@@ -10,6 +10,7 @@ import {
   runKetch,
 } from "../runtime/run-ketch";
 import type { Flags } from "../types";
+import { renderKetchResult } from "../ui/tool-result";
 
 export function registerKetchCodeTool(
   pi: Pick<ExtensionAPI, "registerTool" | "exec">,
@@ -17,6 +18,7 @@ export function registerKetchCodeTool(
   pi.registerTool({
     name: "ketch_code",
     label: "Ketch Code Search",
+    renderResult: renderKetchResult,
     description:
       "Search public open-source code using ketch code. Returns JSON with repository/file/line context.",
     promptSnippet: "Search public OSS code via ketch code",
