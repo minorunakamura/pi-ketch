@@ -12,6 +12,7 @@ import {
   runKetch,
 } from "../runtime/run-ketch";
 import type { Flags } from "../types";
+import { renderKetchResult } from "../ui/tool-result";
 
 export function registerKetchScrapeTool(
   pi: Pick<ExtensionAPI, "registerTool" | "exec">,
@@ -19,6 +20,7 @@ export function registerKetchScrapeTool(
   pi.registerTool({
     name: "ketch_scrape",
     label: "Ketch Scrape",
+    renderResult: renderKetchResult,
     description:
       "Fetch one or more URLs and extract clean markdown/text with ketch scrape. Output is bounded by maxChars (default 6000, max 50000) and returned as JSON.",
     promptSnippet:
